@@ -641,25 +641,22 @@ func (client *Client) Deconstruct(data []byte) (returnMessages []messages.Base, 
 	for _, t := range client.transformers {
 		var ret any
 		if t.String() == "mythic" {
-			ret, err = t.Deconstruct(data, client.secret)
-			if err != nil {
-				err = fmt.Errorf("there was an error transforming the Mythic message:\n%s", err)
-				return
-			}
-			byteData, ok := ret.([]byte)
-			if !ok || byteData == nil {
-				err = fmt.Errorf("transformer %s returned unexpected type or nil", t.String())
-				return
-			}
-			data = byteData
+			ret, err = t.Deconstruct(data, []byte(client.MythicID.String()))
 		} else {
 			ret, err = t.Deconstruct(data, client.secret)
-			data = ret.([]byte)
 		}
+
 		if err != nil {
 			err = fmt.Errorf("there was an error transforming the Mythic message:\n%s", err)
 			return
 		}
+
+		byteData, ok := ret.([]byte)
+		if !ok || byteData == nil {
+			err = fmt.Errorf("transformer %s returned unexpected type or nil", t.String())
+			return
+		}
+		data = byteData
 	}
 
 	cli.Message(cli.DEBUG, fmt.Sprintf("Decrypted JSON:\n%s", data))
